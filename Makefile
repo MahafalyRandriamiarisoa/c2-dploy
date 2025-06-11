@@ -9,6 +9,7 @@ FRAMEWORKS := havoc sliver metasploit
 BUILD_CACHE_DIR ?= $(HOME)/.docker-build-cache
 CPU_CORES ?= $(shell sysctl -n hw.ncpu 2>/dev/null || nproc || echo 4)
 HAVOC_BIN := $(DOCKER_DIR)/havoc/bin/havoc
+REGISTRY ?=
 
 # Couleurs pour l'affichage
 RED := \033[0;31m
@@ -29,10 +30,27 @@ help: ## Afficher l'aide
 	@echo "  test-unit        - Tests unitaires (rapides)"
 	@echo "  test-integration - Tests d'intégration (lents)"
 	@echo ""
-	@echo "$(YELLOW)Déploiement:$(NC)"
+	@echo "$(YELLOW)Configuration:$(NC)"
+	@echo "  configure        - Assistant interactif de configuration"
 	@echo "  validate         - Valider la configuration Terraform"
 	@echo "  plan             - Planifier les changements"
-	@echo "  deploy           - Déployer l'infrastructure"
+	@echo ""
+	@echo "$(YELLOW)Déploiement:$(NC)"
+	@echo "  deploy           - Déployer l'infrastructure complète"
+	@echo "  deploy-custom    - Déployer avec terraform.tfvars personnalisé"
+	@echo ""
+	@echo "$(YELLOW)Déploiements individuels:$(NC)"
+	@echo "  deploy-havoc     - Déployer uniquement Havoc C2"
+	@echo "  deploy-sliver    - Déployer uniquement Sliver C2"
+	@echo "  deploy-mythic    - Déployer uniquement Mythic C2"
+	@echo "  deploy-empire    - Déployer uniquement Empire C2"
+	@echo "  deploy-metasploit - Déployer uniquement Metasploit C2"
+	@echo ""
+	@echo "$(YELLOW)Déploiements combinés:$(NC)"
+	@echo "  deploy-compare-havoc-sliver - Déployer Havoc et Sliver pour comparaison"
+	@echo "  deploy-modern    - Déployer les frameworks modernes (Havoc, Sliver, Mythic)"
+	@echo ""
+	@echo "$(YELLOW)Destruction:$(NC)"
 	@echo "  destroy          - Détruire l'infrastructure"
 	@echo ""
 	@echo "$(YELLOW)Développement:$(NC)"
@@ -69,11 +87,109 @@ plan: validate ## Planifier les changements
 	cd $(TERRAFORM_DIR) && terraform init
 	cd $(TERRAFORM_DIR) && terraform plan
 
-deploy: validate ## Déployer l'infrastructure
+deploy: validate ## Déployer l'infrastructure complète
 	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement..."
 	cd $(TERRAFORM_DIR) && terraform init
 	cd $(TERRAFORM_DIR) && terraform apply -auto-approve
 	@echo "$(GREEN)🎉 Infrastructure déployée!$(NC)"
+
+# Déploiements individuels par framework C2
+deploy-havoc: validate ## Déployer uniquement Havoc C2
+	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement de Havoc C2..."
+	cd $(TERRAFORM_DIR) && terraform init
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-var="deploy_havoc=true" \
+		-var="deploy_sliver=false" \
+		-var="deploy_mythic=false" \
+		-var="deploy_empire=false" \
+		-var="deploy_metasploit=false"
+	@echo "$(GREEN)🗡️  Havoc C2 déployé! Interface: https://localhost:8443$(NC)"
+
+deploy-sliver: validate ## Déployer uniquement Sliver C2
+	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement de Sliver C2..."
+	cd $(TERRAFORM_DIR) && terraform init
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-var="deploy_havoc=false" \
+		-var="deploy_sliver=true" \
+		-var="deploy_mythic=false" \
+		-var="deploy_empire=false" \
+		-var="deploy_metasploit=false"
+	@echo "$(GREEN)🐍 Sliver C2 déployé! CLI: docker exec -it sliver-c2 sliver$(NC)"
+
+deploy-mythic: validate ## Déployer uniquement Mythic C2
+	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement de Mythic C2..."
+	cd $(TERRAFORM_DIR) && terraform init
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-var="deploy_havoc=false" \
+		-var="deploy_sliver=false" \
+		-var="deploy_mythic=true" \
+		-var="deploy_empire=false" \
+		-var="deploy_metasploit=false"
+	@echo "$(GREEN)🏛️  Mythic C2 déployé! Interface: https://localhost:7443$(NC)"
+
+deploy-empire: validate ## Déployer uniquement Empire C2
+	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement d'Empire C2..."
+	cd $(TERRAFORM_DIR) && terraform init
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-var="deploy_havoc=false" \
+		-var="deploy_sliver=false" \
+		-var="deploy_mythic=false" \
+		-var="deploy_empire=true" \
+		-var="deploy_metasploit=false"
+	@echo "$(GREEN)👑 Empire C2 déployé! Interface: http://localhost:5000$(NC)"
+
+deploy-metasploit: validate ## Déployer uniquement Metasploit C2
+	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement de Metasploit C2..."
+	cd $(TERRAFORM_DIR) && terraform init
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-var="deploy_havoc=false" \
+		-var="deploy_sliver=false" \
+		-var="deploy_mythic=false" \
+		-var="deploy_empire=false" \
+		-var="deploy_metasploit=true"
+	@echo "$(GREEN)💥 Metasploit C2 déployé! CLI: docker exec -it metasploit-c2 msfconsole$(NC)"
+
+# Déploiement avec fichier de variables personnalisé
+deploy-custom: validate ## Déployer avec un fichier terraform.tfvars personnalisé
+	@if [ ! -f terraform/terraform.tfvars ]; then \
+		echo "$(RED)❌ Fichier terraform/terraform.tfvars non trouvé!$(NC)"; \
+		echo "$(YELLOW)💡 Copiez terraform/terraform.tfvars.example vers terraform/terraform.tfvars$(NC)"; \
+		echo "$(YELLOW)💡 Ou lancez 'make configure' pour un assistant interactif$(NC)"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement avec configuration personnalisée..."
+	cd $(TERRAFORM_DIR) && terraform init
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve
+	@echo "$(GREEN)🎯 Infrastructure déployée selon votre configuration!$(NC)"
+
+configure: ## Assistant interactif de configuration des frameworks
+	@echo "$(BLUE)[CONFIG]$(NC) Lancement de l'assistant de configuration..."
+	@./scripts/deploy-selector.sh
+
+# Comparaison de configurations
+deploy-compare-havoc-sliver: validate ## Déployer Havoc et Sliver pour comparaison
+	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement pour comparaison Havoc vs Sliver..."
+	cd $(TERRAFORM_DIR) && terraform init
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-var="deploy_havoc=true" \
+		-var="deploy_sliver=true" \
+		-var="deploy_mythic=false" \
+		-var="deploy_empire=false" \
+		-var="deploy_metasploit=false"
+	@echo "$(GREEN)⚔️  Havoc vs Sliver déployés pour comparaison!$(NC)"
+	@echo "$(YELLOW)🗡️  Havoc: https://localhost:8443$(NC)"
+	@echo "$(YELLOW)🐍 Sliver: docker exec -it sliver-c2 sliver$(NC)"
+
+deploy-modern: validate ## Déployer les frameworks modernes (Havoc, Sliver, Mythic)
+	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement des frameworks modernes..."
+	cd $(TERRAFORM_DIR) && terraform init
+	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+		-var="deploy_havoc=true" \
+		-var="deploy_sliver=true" \
+		-var="deploy_mythic=true" \
+		-var="deploy_empire=false" \
+		-var="deploy_metasploit=false"
+	@echo "$(GREEN)🚀 Frameworks modernes déployés!$(NC)"
 
 destroy: ## Détruire l'infrastructure
 	@echo "$(RED)[TERRAFORM]$(NC) Destruction..."
@@ -168,4 +284,34 @@ havoc-bin: ## Compiler le binaire Havoc teamserver en local (cache)
 		echo "$(GREEN)✅ Binaire Havoc compilé et copié$(NC)"; \
 	else \
 		echo "$(GREEN)✅ Binaire déjà présent : compilation sautée$(NC)"; \
-	fi 
+	fi
+
+# Docker remote registry helpers
+
+docker-prune: ## Purge complète (images, volumes, builder cache)
+	@echo "$(BLUE)[DOCKER]$(NC) Purge complète…"
+	docker system prune -a --volumes -f | cat
+	@echo "$(GREEN)✅ Docker propre$(NC)"
+
+docker-pull: ## Tirer les images pré-construites depuis un registre
+	@if [ -z "$(REGISTRY)" ]; then \
+		printf "$(RED)REGISTRY non défini. Utilisez REGISTRY=<votre_registry> make docker-pull$(NC)\n"; exit 1; \
+	fi
+	@for framework in $(FRAMEWORKS); do \
+		remote=$(REGISTRY)/purple-team-$$framework:latest; \
+		echo "$(BLUE)Pull $$remote$(NC)"; \
+		docker pull $$remote || exit 1; \
+	done
+	@echo "$(GREEN)✅ Images tirées avec succès$(NC)"
+
+docker-push: ## Pousser les images locales vers un registre
+	@if [ -z "$(REGISTRY)" ]; then \
+		printf "$(RED)REGISTRY non défini. Utilisez REGISTRY=<votre_registry> make docker-push$(NC)\n"; exit 1; \
+	fi
+	@for framework in $(FRAMEWORKS); do \
+		local=purple-team-$$framework:latest; \
+		remote=$(REGISTRY)/$$local; \
+		echo "$(BLUE)Tag & push $$local -> $$remote$(NC)"; \
+		docker tag $$local $$remote && docker push $$remote || exit 1; \
+	done
+	@echo "$(GREEN)✅ Images publiées$(NC)" 

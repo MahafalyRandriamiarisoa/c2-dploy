@@ -1,18 +1,16 @@
-# Images Docker pour les C2
+# Images Docker pour les C2 (conditionnelles)
 
 # Image Havoc C2
 resource "docker_image" "havoc" {
-  name = "havoc-c2:latest"
-  build {
-    context    = "../docker/havoc"
-    dockerfile = "Dockerfile"
-    cache_from = ["havoc-c2:latest"]
-  }
+  count        = var.deploy_havoc ? 1 : 0
+  name         = "purple-team-havoc:latest"
+  keep_locally = true
 }
 
 # Image Sliver C2
 resource "docker_image" "sliver" {
-  name = "sliver-c2:latest"
+  count = var.deploy_sliver ? 1 : 0
+  name  = "sliver-c2:latest"
   build {
     context    = "../docker/sliver"
     dockerfile = "Dockerfile"
@@ -22,30 +20,41 @@ resource "docker_image" "sliver" {
 
 # Images Mythic officielles (Docker Hub)
 resource "docker_image" "mythic_server" {
-  name = "itsafeaturemythic/mythic_server:0.0.5"
+  count    = var.deploy_mythic ? 1 : 0
+  name     = "itsafeaturemythic/mythic_server:0.0.4"
+  platform = "linux/amd64"
 }
 
 resource "docker_image" "mythic_rabbitmq" {
-  name = "itsafeaturemythic/mythic_rabbitmq:0.0.3"
+  count    = var.deploy_mythic ? 1 : 0
+  name     = "itsafeaturemythic/mythic_rabbitmq:0.0.3"
+  platform = "linux/amd64"
 }
 
 resource "docker_image" "mythic_postgres" {
-  name = "itsafeaturemythic/mythic_postgres:0.0.2"
+  count    = var.deploy_mythic ? 1 : 0
+  name     = "itsafeaturemythic/mythic_postgres:0.0.2"
+  platform = "linux/amd64"
 }
 
 # UI React front-end
 resource "docker_image" "mythic_react" {
-  name = "itsafeaturemythic/mythic_react:0.0.6"
+  count    = var.deploy_mythic ? 1 : 0
+  name     = "itsafeaturemythic/mythic_react:0.0.6"
+  platform = "linux/amd64"
 }
 
 # Image Empire C2 (officielle Docker Hub)
 resource "docker_image" "empire" {
-  name = "bcsecurity/empire:latest"
+  count    = var.deploy_empire ? 1 : 0
+  name     = "bcsecurity/empire:latest"
+  platform = "linux/amd64"
 }
 
 # Image Metasploit
 resource "docker_image" "metasploit" {
-  name = "metasploit-c2:latest"
+  count = var.deploy_metasploit ? 1 : 0
+  name  = "metasploit-c2:latest"
   build {
     context    = "../docker/metasploit"
     dockerfile = "Dockerfile"

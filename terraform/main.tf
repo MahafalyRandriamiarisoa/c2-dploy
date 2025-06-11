@@ -13,9 +13,24 @@ terraform {
 
 provider "docker" {}
 
-# Création des dossiers de données locaux
+# Création des dossiers de données locaux (conditionnel)
+locals {
+  enabled_frameworks = {
+    for framework in ["havoc", "sliver", "mythic", "empire", "metasploit"] : 
+    framework => lookup({
+      "havoc"      = var.deploy_havoc
+      "sliver"     = var.deploy_sliver  
+      "mythic"     = var.deploy_mythic
+      "empire"     = var.deploy_empire
+      "metasploit" = var.deploy_metasploit
+    }, framework, false)
+  }
+  
+  active_frameworks = [for k, v in local.enabled_frameworks : k if v]
+}
+
 resource "local_file" "data_dirs" {
-  for_each = toset(["havoc", "sliver", "mythic", "empire", "metasploit"])
+  for_each = toset(local.active_frameworks)
 
   content  = ""
   filename = "${path.cwd}/data/${each.key}/.gitkeep"
@@ -58,8 +73,10 @@ resource "docker_network" "purple_team_network" {
 
 # Container Havoc C2
 resource "docker_container" "havoc_c2" {
+  count = var.deploy_havoc ? 1 : 0
+  
   name  = "havoc-c2"
-  image = docker_image.havoc.image_id
+  image = docker_image.havoc[0].image_id
 
   depends_on = [local_file.data_dirs]
 
@@ -93,8 +110,10 @@ resource "docker_container" "havoc_c2" {
 
 # Container Sliver C2
 resource "docker_container" "sliver_c2" {
+  count = var.deploy_sliver ? 1 : 0
+  
   name  = "sliver-c2"
-  image = docker_image.sliver.image_id
+  image = docker_image.sliver[0].image_id
 
   depends_on = [local_file.data_dirs]
 
@@ -130,8 +149,10 @@ resource "docker_container" "sliver_c2" {
 
 # RabbitMQ (broker)
 resource "docker_container" "mythic_rabbitmq" {
+  count = var.deploy_mythic ? 1 : 0
+  
   name  = "mythic-rabbitmq"
-  image = docker_image.mythic_rabbitmq.name
+  image = docker_image.mythic_rabbitmq[0].name
 
   networks_advanced {
     name         = docker_network.purple_team_network.name
@@ -153,8 +174,10 @@ resource "docker_container" "mythic_rabbitmq" {
 
 # Postgres (DB)
 resource "docker_container" "mythic_postgres" {
+  count = var.deploy_mythic ? 1 : 0
+  
   name  = "mythic-postgres"
-  image = docker_image.mythic_postgres.name
+  image = docker_image.mythic_postgres[0].name
 
   networks_advanced {
     name         = docker_network.purple_team_network.name
@@ -177,8 +200,10 @@ resource "docker_container" "mythic_postgres" {
 
 # Core Mythic server (API, workers)
 resource "docker_container" "mythic_server" {
+  count = var.deploy_mythic ? 1 : 0
+  
   name  = "mythic-server"
-  image = docker_image.mythic_server.name
+  image = docker_image.mythic_server[0].name
 
   depends_on = [docker_container.mythic_rabbitmq, docker_container.mythic_postgres]
 
@@ -200,8 +225,10 @@ resource "docker_container" "mythic_server" {
 
 # NGINX front-end (UI, SSL termination)
 resource "docker_container" "mythic_react" {
+  count = var.deploy_mythic ? 1 : 0
+  
   name  = "mythic-react"
-  image = docker_image.mythic_react.name
+  image = docker_image.mythic_react[0].name
 
   depends_on = [docker_container.mythic_server]
 
@@ -234,8 +261,10 @@ resource "docker_container" "mythic_react" {
 
 # Container Empire C2
 resource "docker_container" "empire_c2" {
+  count = var.deploy_empire ? 1 : 0
+  
   name  = "empire-c2"
-  image = docker_image.empire.image_id
+  image = docker_image.empire[0].image_id
 
   depends_on = [local_file.data_dirs]
 
@@ -271,8 +300,10 @@ resource "docker_container" "empire_c2" {
 
 # Container Metasploit
 resource "docker_container" "metasploit_c2" {
+  count = var.deploy_metasploit ? 1 : 0
+  
   name  = "metasploit-c2"
-  image = docker_image.metasploit.image_id
+  image = docker_image.metasploit[0].image_id
 
   depends_on = [local_file.data_dirs]
 
@@ -314,19 +345,12 @@ resource "local_file" "payload_generator" {
       empire     = "172.20.0.40"
       metasploit = "172.20.0.50"
     }
+    enabled_frameworks = local.enabled_frameworks
   })
   filename = "${path.cwd}/payloads/generate-all.sh"
 
-  depends_on = [
-    docker_container.havoc_c2,
-    docker_container.sliver_c2,
-    docker_container.mythic_rabbitmq,
-    docker_container.mythic_postgres,
-    docker_container.mythic_server,
-    docker_container.mythic_react,
-    docker_container.empire_c2,
-    docker_container.metasploit_c2
-  ]
+  # Dépendance simplifiée - sera créé même si aucun container n'est déployé
+  depends_on = [local_file.data_dirs]
 
   provisioner "local-exec" {
     command = "chmod +x ${path.cwd}/payloads/generate-all.sh"

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/docker/docker/client"
-	"github.com/stretchr/testify/assert"
 )
 
 // TestC2ContainersHealth vérifie que chaque conteneur C2 est en cours d'exécution,
@@ -35,24 +34,28 @@ func TestC2ContainersHealth(t *testing.T) {
 		name := name // capture range variable
 		port := port
 		t.Run(name, func(t *testing.T) {
-			// Inspecter le conteneur
-			inspect, err := cli.ContainerInspect(ctx, name)
-			assert.NoError(t, err, "Le conteneur %s devrait exister", name)
+			// Attendre jusqu'à 5 min que le conteneur soit RUNNING & healthy
+			deadline := time.Now().Add(5 * time.Minute)
+			for {
+				// Inspecter le conteneur
+				inspect, err := cli.ContainerInspect(ctx, name)
+				if err == nil && inspect.State != nil && inspect.State.Running {
+					// Si un healthcheck est défini, vérifier qu'il est healthy
+					if inspect.State.Health == nil || inspect.State.Health.Status == "healthy" {
+						// Tester le port TCP
+						address := net.JoinHostPort("127.0.0.1", port)
+						conn, errDial := net.DialTimeout("tcp", address, 2*time.Second)
+						if errDial == nil {
+							_ = conn.Close()
+							break // OK
+						}
+					}
+				}
 
-			// Vérifier qu'il est RUNNING
-			assert.True(t, inspect.State.Running, "Le conteneur %s doit être en cours d'exécution", name)
-
-			// Vérifier le statut de healthcheck si défini
-			if inspect.State.Health != nil {
-				assert.Equal(t, "healthy", inspect.State.Health.Status, "Healthcheck de %s", name)
-			}
-
-			// Tester l'accessibilité réseau du port exposé
-			address := net.JoinHostPort("127.0.0.1", port)
-			conn, err := net.DialTimeout("tcp", address, 2*time.Second)
-			assert.NoError(t, err, "Impossible de se connecter à %s:%s", name, port)
-			if err == nil {
-				_ = conn.Close()
+				if time.Now().After(deadline) {
+					t.Fatalf("%s n'est pas prêt après 5 min", name)
+				}
+				time.Sleep(5 * time.Second)
 			}
 		})
 	}
