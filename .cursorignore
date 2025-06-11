@@ -14,6 +14,10 @@ docker/havoc/bin/
 # Données persistantes des C2 et payloads générés
 payloads/
 data/
+terraform/data/
 
 # Fichiers Go modules volumineux
-/tests/go.sum 
+/tests/go.sum
+
+# Fichiers de test binaires volumineux
+/tests/*.test 

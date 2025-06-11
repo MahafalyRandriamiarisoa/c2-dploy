@@ -15,6 +15,7 @@ crash.log
 # Docker runtime data
 payloads/
 data/
+terraform/data/
 
 # Compiled binaries
 **/bin/
