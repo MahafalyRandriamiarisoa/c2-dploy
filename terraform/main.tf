@@ -16,16 +16,16 @@ provider "docker" {}
 # Création des dossiers de données locaux (conditionnel)
 locals {
   enabled_frameworks = {
-    for framework in ["havoc", "sliver", "mythic", "empire", "metasploit"] : 
+    for framework in ["havoc", "sliver", "mythic", "empire", "metasploit"] :
     framework => lookup({
       "havoc"      = var.deploy_havoc
-      "sliver"     = var.deploy_sliver  
+      "sliver"     = var.deploy_sliver
       "mythic"     = var.deploy_mythic
       "empire"     = var.deploy_empire
       "metasploit" = var.deploy_metasploit
     }, framework, false)
   }
-  
+
   active_frameworks = [for k, v in local.enabled_frameworks : k if v]
 }
 
@@ -74,7 +74,7 @@ resource "docker_network" "purple_team_network" {
 # Container Havoc C2
 resource "docker_container" "havoc_c2" {
   count = var.deploy_havoc ? 1 : 0
-  
+
   name  = "havoc-c2"
   image = docker_image.havoc[0].image_id
 
@@ -111,7 +111,7 @@ resource "docker_container" "havoc_c2" {
 # Container Sliver C2
 resource "docker_container" "sliver_c2" {
   count = var.deploy_sliver ? 1 : 0
-  
+
   name  = "sliver-c2"
   image = docker_image.sliver[0].image_id
 
@@ -150,7 +150,7 @@ resource "docker_container" "sliver_c2" {
 # RabbitMQ (broker)
 resource "docker_container" "mythic_rabbitmq" {
   count = var.deploy_mythic ? 1 : 0
-  
+
   name  = "mythic-rabbitmq"
   image = docker_image.mythic_rabbitmq[0].name
 
@@ -160,8 +160,8 @@ resource "docker_container" "mythic_rabbitmq" {
   }
 
   env = [
-    "RABBITMQ_DEFAULT_USER=mythic",
-    "RABBITMQ_DEFAULT_PASS=mythicpassword"
+    "RABBITMQ_USER=mythic",
+    "RABBITMQ_PASSWORD=mythicpassword"
   ]
 
   healthcheck {
@@ -175,7 +175,7 @@ resource "docker_container" "mythic_rabbitmq" {
 # Postgres (DB)
 resource "docker_container" "mythic_postgres" {
   count = var.deploy_mythic ? 1 : 0
-  
+
   name  = "mythic-postgres"
   image = docker_image.mythic_postgres[0].name
 
@@ -201,7 +201,7 @@ resource "docker_container" "mythic_postgres" {
 # Core Mythic server (API, workers)
 resource "docker_container" "mythic_server" {
   count = var.deploy_mythic ? 1 : 0
-  
+
   name  = "mythic-server"
   image = docker_image.mythic_server[0].name
 
@@ -226,7 +226,7 @@ resource "docker_container" "mythic_server" {
 # NGINX front-end (UI, SSL termination)
 resource "docker_container" "mythic_react" {
   count = var.deploy_mythic ? 1 : 0
-  
+
   name  = "mythic-react"
   image = docker_image.mythic_react[0].name
 
@@ -262,7 +262,7 @@ resource "docker_container" "mythic_react" {
 # Container Empire C2
 resource "docker_container" "empire_c2" {
   count = var.deploy_empire ? 1 : 0
-  
+
   name  = "empire-c2"
   image = docker_image.empire[0].image_id
 
@@ -301,7 +301,7 @@ resource "docker_container" "empire_c2" {
 # Container Metasploit
 resource "docker_container" "metasploit_c2" {
   count = var.deploy_metasploit ? 1 : 0
-  
+
   name  = "metasploit-c2"
   image = docker_image.metasploit[0].image_id
 
