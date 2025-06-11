@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1.4
+FROM ubuntu:22.04
+
+LABEL maintainer="C2-Dploy"
+LABEL description="Base image with Havoc build dependencies"
+
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    build-essential \
+    cmake \
+    libssl-dev \
+    python3 \
+    python3-pip \
+    python3-dev \
+    golang-go \
+    nasm \
+    mingw-w64 \
+    wine \
+    curl \
+    wget \
+    sudo \
+    && rm -rf /var/lib/apt/lists/* \
+    && wget -q https://go.dev/dl/go1.21.5.linux-amd64.tar.gz \
+    && tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz \
+    && rm go1.21.5.linux-amd64.tar.gz \
+    && update-alternatives --install /usr/bin/go go /usr/local/go/bin/go 100 && update-alternatives --set go /usr/local/go/bin/go
+
+ENV PATH="/usr/local/go/bin:$PATH"
+
+# Marquer la couche pour le cache
+LABEL stage="havoc-deps" 

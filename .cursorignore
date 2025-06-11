@@ -1,0 +1,19 @@
+# Caches et artefacts générés – exclus de l’indexation Cursor
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate*
+terraform/.terraform.lock.hcl
+
+# Docker build cache
+**/.docker-build-cache/
+
+# Binaire Havoc pré-compilé et autres artefacts binaires
+docker/havoc/bin/
+
+# Données persistantes des C2 et payloads générés
+payloads/
+data/
+
+# Fichiers Go modules volumineux
+/tests/go.sum 

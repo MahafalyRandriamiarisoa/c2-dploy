@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+
+# Terraform
+.terraform/
+terraform.tfstate*
+*.tfplan
+crash.log
+
+# Docker runtime data
+payloads/
+data/
+
+# Compiled binaries
+**/bin/
+*.test
+
+# Logs
+*.log
+
+# Misc
+.env 
