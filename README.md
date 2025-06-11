@@ -44,7 +44,6 @@ Le tout est interconnecté sur le réseau Docker `purple-team-net` et exposé lo
   - Terraform ≥ 1.6
   - Go ≥ 1.21 (exécution des tests)
   - Make
-  - (optionnel) Ansible si vous utilisez `deploy.sh`
 
 ## Mise en route rapide
 
@@ -89,7 +88,6 @@ make tdd
 ├── docker/           # Dockerfiles et scripts de démarrage
 ├── tests/            # Suites Terratest (Go)
 ├── Makefile          # Commandes principales
-├── deploy.sh         # Exemple de déploiement tout-en-un
 └── payloads/         # Répertoire cible pour les payloads générés
 ```
 
