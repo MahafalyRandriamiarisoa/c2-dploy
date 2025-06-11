@@ -77,7 +77,14 @@ deploy: validate ## Déployer l'infrastructure
 
 destroy: ## Détruire l'infrastructure
 	@echo "$(RED)[TERRAFORM]$(NC) Destruction..."
-	cd $(TERRAFORM_DIR) && terraform destroy -auto-approve
+	cd $(TERRAFORM_DIR) && terraform init -backend=false > /dev/null
+	# Détruire toutes les ressources docker_container et docker_image individuellement pour éviter l'erreur prevent_destroy
+	cd $(TERRAFORM_DIR) && terraform state list | grep -E "docker_(container|image)" | while read res; do \
+		echo "$(YELLOW)→ destruction $$res$(NC)"; \
+		terraform destroy -auto-approve -target=$$res > /dev/null; \
+	done
+	# Le réseau est protégé, on le supprime manuellement ensuite
+	-docker network rm purple-team-net > /dev/null 2>&1 || true
 	@echo "$(YELLOW)🧹 Infrastructure détruite$(NC)"
 
 # Docker
