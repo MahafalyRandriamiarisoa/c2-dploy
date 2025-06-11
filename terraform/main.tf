@@ -291,7 +291,7 @@ resource "docker_container" "empire_c2" {
   working_dir = "/empire"
 
   healthcheck {
-    test     = ["CMD", "curl", "-f", "http://localhost:5000"]
+    test     = ["CMD", "curl", "-f", "http://localhost:1337/docs"]
     interval = "30s"
     timeout  = "10s"
     retries  = 3
