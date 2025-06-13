@@ -1,12 +1,4 @@
-terraform {
-  required_version = ">= 1.4"
-  required_providers {
-    digitalocean = {
-      source  = "digitalocean/digitalocean"
-      version = ">= 2.33.0"
-    }
-  }
-}
+# Bloc terraform supprimé (géré dans main.tf)
 
 provider "digitalocean" {
   token = var.do_token != "" ? var.do_token : (try(env("DIGITALOCEAN_TOKEN"), ""))
