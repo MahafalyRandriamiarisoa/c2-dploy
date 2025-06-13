@@ -10,6 +10,7 @@ BUILD_CACHE_DIR ?= $(HOME)/.docker-build-cache
 CPU_CORES ?= $(shell sysctl -n hw.ncpu 2>/dev/null || nproc || echo 4)
 HAVOC_BIN := $(DOCKER_DIR)/havoc/bin/havoc
 REGISTRY ?=
+TF_BIN ?= $(shell command -v terraform 2>/dev/null || command -v tofu)
 
 # Couleurs pour l'affichage
 RED := \033[0;31m
@@ -73,31 +74,31 @@ test-integration: ## Tests d'intégration (déploiement complet)
 # Terraform
 validate: ## Valider la configuration Terraform
 	@echo "$(BLUE)[TERRAFORM]$(NC) Validation..."
-	cd $(TERRAFORM_DIR) && terraform init -backend=false
-	cd $(TERRAFORM_DIR) && terraform validate
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init -backend=false
+	cd $(TERRAFORM_DIR) && $(TF_BIN) validate
 	@echo "$(GREEN)✅ Configuration Terraform valide$(NC)"
 
 fmt: ## Formater le code Terraform
 	@echo "$(BLUE)[TERRAFORM]$(NC) Formatage..."
-	cd $(TERRAFORM_DIR) && terraform fmt -recursive
+	cd $(TERRAFORM_DIR) && $(TF_BIN) fmt -recursive
 	@echo "$(GREEN)✅ Code formaté$(NC)"
 
 plan: validate ## Planifier les changements
 	@echo "$(BLUE)[TERRAFORM]$(NC) Plan..."
-	cd $(TERRAFORM_DIR) && terraform init
-	cd $(TERRAFORM_DIR) && terraform plan
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) plan
 
 deploy: validate ## Déployer l'infrastructure complète
 	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement..."
-	cd $(TERRAFORM_DIR) && terraform init
-	cd $(TERRAFORM_DIR) && terraform apply -auto-approve
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) apply -auto-approve
 	@echo "$(GREEN)🎉 Infrastructure déployée!$(NC)"
 
 # Déploiements individuels par framework C2
 deploy-havoc: validate ## Déployer uniquement Havoc C2
 	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement de Havoc C2..."
-	cd $(TERRAFORM_DIR) && terraform init
-	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) apply -auto-approve \
 		-var="deploy_havoc=true" \
 		-var="deploy_sliver=false" \
 		-var="deploy_mythic=false" \
@@ -107,8 +108,8 @@ deploy-havoc: validate ## Déployer uniquement Havoc C2
 
 deploy-sliver: validate ## Déployer uniquement Sliver C2
 	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement de Sliver C2..."
-	cd $(TERRAFORM_DIR) && terraform init
-	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) apply -auto-approve \
 		-var="deploy_havoc=false" \
 		-var="deploy_sliver=true" \
 		-var="deploy_mythic=false" \
@@ -118,8 +119,8 @@ deploy-sliver: validate ## Déployer uniquement Sliver C2
 
 deploy-mythic: validate ## Déployer uniquement Mythic C2
 	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement de Mythic C2..."
-	cd $(TERRAFORM_DIR) && terraform init
-	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) apply -auto-approve \
 		-var="deploy_havoc=false" \
 		-var="deploy_sliver=false" \
 		-var="deploy_mythic=true" \
@@ -129,8 +130,8 @@ deploy-mythic: validate ## Déployer uniquement Mythic C2
 
 deploy-empire: validate ## Déployer uniquement Empire C2
 	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement d'Empire C2..."
-	cd $(TERRAFORM_DIR) && terraform init
-	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) apply -auto-approve \
 		-var="deploy_havoc=false" \
 		-var="deploy_sliver=false" \
 		-var="deploy_mythic=false" \
@@ -140,8 +141,8 @@ deploy-empire: validate ## Déployer uniquement Empire C2
 
 deploy-metasploit: validate ## Déployer uniquement Metasploit C2
 	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement de Metasploit C2..."
-	cd $(TERRAFORM_DIR) && terraform init
-	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) apply -auto-approve \
 		-var="deploy_havoc=false" \
 		-var="deploy_sliver=false" \
 		-var="deploy_mythic=false" \
@@ -158,8 +159,8 @@ deploy-custom: validate ## Déployer avec un fichier terraform.tfvars personnali
 		exit 1; \
 	fi
 	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement avec configuration personnalisée..."
-	cd $(TERRAFORM_DIR) && terraform init
-	cd $(TERRAFORM_DIR) && terraform apply -auto-approve
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) apply -auto-approve
 	@echo "$(GREEN)🎯 Infrastructure déployée selon votre configuration!$(NC)"
 
 configure: ## Assistant interactif de configuration des frameworks
@@ -169,8 +170,8 @@ configure: ## Assistant interactif de configuration des frameworks
 # Comparaison de configurations
 deploy-compare-havoc-sliver: validate ## Déployer Havoc et Sliver pour comparaison
 	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement pour comparaison Havoc vs Sliver..."
-	cd $(TERRAFORM_DIR) && terraform init
-	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) apply -auto-approve \
 		-var="deploy_havoc=true" \
 		-var="deploy_sliver=true" \
 		-var="deploy_mythic=false" \
@@ -182,8 +183,8 @@ deploy-compare-havoc-sliver: validate ## Déployer Havoc et Sliver pour comparai
 
 deploy-modern: validate ## Déployer les frameworks modernes (Havoc, Sliver, Mythic)
 	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement des frameworks modernes..."
-	cd $(TERRAFORM_DIR) && terraform init
-	cd $(TERRAFORM_DIR) && terraform apply -auto-approve \
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) apply -auto-approve \
 		-var="deploy_havoc=true" \
 		-var="deploy_sliver=true" \
 		-var="deploy_mythic=true" \
@@ -193,11 +194,11 @@ deploy-modern: validate ## Déployer les frameworks modernes (Havoc, Sliver, Myt
 
 destroy: ## Détruire l'infrastructure
 	@echo "$(RED)[TERRAFORM]$(NC) Destruction..."
-	cd $(TERRAFORM_DIR) && terraform init -backend=false > /dev/null
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init -backend=false > /dev/null
 	# Détruire toutes les ressources docker_container et docker_image individuellement pour éviter l'erreur prevent_destroy
-	cd $(TERRAFORM_DIR) && terraform state list | grep -E "docker_(container|image)" | while read res; do \
+	cd $(TERRAFORM_DIR) && $(TF_BIN) state list | grep -E "docker_(container|image)" | while read res; do \
 		echo "$(YELLOW)→ destruction $$res$(NC)"; \
-		terraform destroy -auto-approve -target=$$res > /dev/null; \
+               $(TF_BIN) destroy -auto-approve -target=$$res > /dev/null; \
 	done
 	# Le réseau est protégé, on le supprime manuellement ensuite
 	-docker network rm purple-team-net > /dev/null 2>&1 || true
@@ -256,14 +257,14 @@ deps: ## Installer les dépendances
 	# Go modules
 	cd $(TESTS_DIR) && go mod download
 	# Terraform providers
-	cd $(TERRAFORM_DIR) && terraform init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
 	@echo "$(GREEN)✅ Dépendances installées$(NC)"
 
 # Status du déploiement
 status: ## Afficher le status de l'infrastructure
 	@echo "$(BLUE)[STATUS]$(NC) Infrastructure actuelle:"
 	@if [ -f $(TERRAFORM_DIR)/terraform.tfstate ]; then \
-		cd $(TERRAFORM_DIR) && terraform show -json | jq -r '.values.root_module.resources[] | select(.type == "docker_container") | "Container: " + .values.name + " - Status: " + (.values.running | tostring)' 2>/dev/null || echo "Terraform state trouvé mais jq non disponible"; \
+		cd $(TERRAFORM_DIR) && $(TF_BIN) show -json | jq -r '.values.root_module.resources[] | select(.type == "docker_container") | "Container: " + .values.name + " - Status: " + (.values.running | tostring)' 2>/dev/null || echo "Terraform state trouvé mais jq non disponible"; \
 	else \
 		echo "$(YELLOW)Aucune infrastructure déployée$(NC)"; \
 	fi
