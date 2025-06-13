@@ -120,13 +120,18 @@ install_docker() {
             echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
             sudo apt update
             sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-            sudo usermod -aG docker $USER
+            # Ajout au groupe docker (non bloquant)
+            if command -v usermod >/dev/null && [ -n "$USER" ] && [ "$USER" != "root" ]; then
+                sudo usermod -aG docker $USER || echo -e "${YELLOW}Ajout au groupe docker échoué (environnement restreint ou jetable, c'est normal)${NC}"
+            fi
             echo -e "${YELLOW}⚠️  Redémarrez votre session pour que les changements Docker prennent effet${NC}"
         elif command_exists yum; then
             sudo yum install -y docker
             sudo systemctl start docker
             sudo systemctl enable docker
-            sudo usermod -aG docker $USER
+            if command -v usermod >/dev/null && [ -n "$USER" ] && [ "$USER" != "root" ]; then
+                sudo usermod -aG docker $USER || echo -e "${YELLOW}Ajout au groupe docker échoué (environnement restreint ou jetable, c'est normal)${NC}"
+            fi
         fi
     fi
 }
