@@ -25,4 +25,7 @@ terraform/data/
 *.log
 
 # Misc
-.env 
+.env
+
+# DigitalOcean secrets
+terraform/do_*.tfvars 

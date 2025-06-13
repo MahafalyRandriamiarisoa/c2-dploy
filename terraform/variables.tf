@@ -55,4 +55,35 @@ variable "default_password" {
   type        = string
   default     = "PurpleTeam2024!"
   sensitive   = true
+}
+
+variable "deploy_on_digitalocean" {
+  type        = bool
+  description = "Déployer les C2 sur un droplet DigitalOcean au lieu du Docker local"
+  default     = false
+}
+
+variable "do_token" {
+  type        = string
+  description = "Token API DigitalOcean (peut aussi être fourni via la variable d'environnement DIGITALOCEAN_TOKEN)"
+  sensitive   = true
+  default     = ""
+}
+
+variable "do_region" {
+  type        = string
+  description = "Région DigitalOcean (ex: fra1, nyc3, sfo3)"
+  default     = "fra1"
+}
+
+variable "do_size" {
+  type        = string
+  description = "Taille du droplet DigitalOcean"
+  default     = "s-2vcpu-4gb"
+}
+
+variable "do_ssh_key_ids" {
+  type        = list(string)
+  description = "Liste des IDs de clés SSH ajoutées à votre compte DigitalOcean pour l'accès au droplet"
+  default     = []
 } 

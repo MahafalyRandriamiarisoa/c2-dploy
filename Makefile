@@ -61,6 +61,9 @@ help: ## Afficher l'aide
 	@echo "  fmt              - Formater le code"
 	@echo "  clean            - Nettoyer les artefacts"
 	@echo "  docker-build     - Construire les images Docker"
+	@echo ""
+	@echo "$(YELLOW)Cloud:$(NC)"
+	@echo "  deploy-do        - Déployer l'infrastructure sur DigitalOcean (1 droplet)"
 
 # Setup initial
 setup: ## Configuration automatique de l'environnement (prérequis, dépendances, validation)
@@ -323,4 +326,14 @@ docker-push: ## Pousser les images locales vers un registre
 		echo "$(BLUE)Tag & push $$local -> $$remote$(NC)"; \
 		docker tag $$local $$remote && docker push $$remote || exit 1; \
 	done
-	@echo "$(GREEN)✅ Images publiées$(NC)" 
+	@echo "$(GREEN)✅ Images publiées$(NC)"
+
+# Déploiement DigitalOcean (1 droplet)
+deploy-do: validate ## Déployer sur DigitalOcean (droplet Docker)
+	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement DigitalOcean..."
+	@if [ -z "$(DIGITALOCEAN_TOKEN)$(DO_TOKEN)" ]; then \
+		echo "$(RED)❌ DIGITALOCEAN_TOKEN non défini (export ou fichier .tfvars)$(NC)"; exit 1; \
+	fi
+	cd $(TERRAFORM_DIR) && $(TF_BIN) init
+	cd $(TERRAFORM_DIR) && $(TF_BIN) apply -auto-approve -var="deploy_on_digitalocean=true"
+	@echo "$(GREEN)🌐 Infrastructure déployée sur DigitalOcean$(NC)" 
