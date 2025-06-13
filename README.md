@@ -41,7 +41,10 @@ Le tout est interconnecté sur le réseau Docker `purple-team-net` et exposé lo
 
 - macOS ou Linux avec :
   - Docker ≥ 20.10
-  - Terraform ≥ 1.6
+  - Terraform ≥ 1.6 ou [OpenTofu](https://opentofu.org)
+    ```bash
+    curl -L https://get.opentofu.org/install | sudo bash
+    ```
   - Go ≥ 1.21 (exécution des tests)
   - Make
 
