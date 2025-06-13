@@ -1,5 +1,5 @@
 # C2-Dploy - Makefile TDD
-.PHONY: help test test-unit test-integration deploy destroy clean fmt validate havoc-bin
+.PHONY: help test test-unit test-integration deploy destroy clean fmt validate havoc-bin setup
 
 # Variables
 TERRAFORM_DIR := terraform
@@ -25,6 +25,9 @@ export DOCKER_BUILDKIT=1
 help: ## Afficher l'aide
 	@echo "$(BLUE)C2-Dploy - TDD Workflow$(NC)"
 	@echo "================================"
+	@echo ""
+	@echo "$(YELLOW)Setup initial:$(NC)"
+	@echo "  setup            - Configuration automatique de l'environnement"
 	@echo ""
 	@echo "$(YELLOW)Tests:$(NC)"
 	@echo "  test             - Lancer tous les tests"
@@ -58,6 +61,11 @@ help: ## Afficher l'aide
 	@echo "  fmt              - Formater le code"
 	@echo "  clean            - Nettoyer les artefacts"
 	@echo "  docker-build     - Construire les images Docker"
+
+# Setup initial
+setup: ## Configuration automatique de l'environnement (prérequis, dépendances, validation)
+	@echo "$(BLUE)[SETUP]$(NC) Lancement du script de configuration automatique..."
+	@./scripts/setup.sh
 
 # Tests
 test: test-unit test-integration ## Lancer tous les tests

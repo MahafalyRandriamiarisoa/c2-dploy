@@ -42,33 +42,97 @@ Le tout est interconnecté sur le réseau Docker `purple-team-net` et exposé lo
 - macOS ou Linux avec :
   - Docker ≥ 20.10
   - Terraform ≥ 1.6 ou [OpenTofu](https://opentofu.org)
-    ```bash
-    curl -L https://get.opentofu.org/install | sudo bash
-    ```
   - Go ≥ 1.21 (exécution des tests)
   - Make
 
 ## Mise en route rapide
+
+### Option 1 : Setup automatique (recommandé)
 
 ```bash
 # 1. Récupération du dépôt
 git clone https://github.com/USERNAME/c2-dploy.git
 cd c2-dploy
 
-# 2. Installation des dépendances
-make deps
+# 2. Setup automatique (vérifie et installe les prérequis)
+make setup
 
-# 3. Déploiement complet
+# 3. Configuration personnalisée (optionnel)
+make configure
+
+# 4. Déploiement complet
 make deploy
 
-# 4. Vérification des containers et des ports
+# 5. Vérification des containers et des ports
 make status
+```
+
+### Option 2 : Setup manuel
+
+```bash
+# 1. Récupération du dépôt
+git clone https://github.com/USERNAME/c2-dploy.git
+cd c2-dploy
+
+# 2. Vérification des prérequis (sans installation automatique)
+./scripts/setup-dev.sh
+
+# 3. Installation des dépendances
+make deps
+
+# 4. Déploiement complet
+make deploy
+
+# 5. Vérification des containers et des ports
+make status
+```
+
+### Option 3 : Setup minimal
+
+```bash
+# 1. Récupération du dépôt
+git clone https://github.com/USERNAME/c2-dploy.git
+cd c2-dploy
+
+# 2. Copie de la configuration par défaut
+cp terraform/terraform.tfvars.example terraform/terraform.tfvars
+
+# 3. Installation des dépendances
+make deps
+
+# 4. Déploiement complet
+make deploy
 ```
 
 Pour détruire l'infrastructure :
 
 ```bash
 make destroy
+```
+
+## Scripts de setup
+
+Le projet inclut deux scripts de setup :
+
+- **`scripts/setup.sh`** : Setup complet avec installation automatique des prérequis
+- **`scripts/setup-dev.sh`** : Setup rapide avec vérification des prérequis existants
+
+### Résolution des problèmes courants
+
+Si vous rencontrez l'erreur `Couldn't find an alternative telinit implementation to spawn` :
+
+```bash
+# Solution 1 : Setup automatique
+make setup
+
+# Solution 2 : Installation manuelle de Terraform/OpenTofu
+# Sur macOS :
+brew install opentofu
+
+# Sur Ubuntu/Debian :
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+sudo apt update && sudo apt install terraform
 ```
 
 ## Workflow de développement (TDD)
