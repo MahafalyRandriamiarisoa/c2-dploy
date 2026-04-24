@@ -19,9 +19,10 @@ network_subnet = "172.20.0.0/16"
 # Domaine de base (optionnel)
 base_domain = "localhost"
 
-# Mot de passe par défaut pour tous les C2
-# CHANGEZ CETTE VALEUR EN PRODUCTION !
-default_password = "PurpleTeam2024!"
+# Mot de passe admin pour les C2 (OBLIGATOIRE, >= 12 caractères).
+# Préférez la variable d'environnement :   export TF_VAR_default_password='...'
+# Ou décommentez cette ligne dans votre terraform.tfvars LOCAL (non committé) :
+# default_password = "changez-moi-par-un-mdp-fort"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Exemples de configurations courantes :

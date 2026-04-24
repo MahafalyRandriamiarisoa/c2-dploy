@@ -28,4 +28,7 @@ terraform/data/
 .env
 
 # DigitalOcean secrets
-terraform/do_*.tfvars 
+terraform/do_*.tfvars
+
+# Secrets utilisateur (mdp C2). Seul terraform.tfvars.example est committé.
+terraform/terraform.tfvars 

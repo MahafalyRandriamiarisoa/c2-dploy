@@ -1,12 +1,14 @@
 #!/bin/bash
+set -euo pipefail
+
+: "${MYTHIC_ADMIN_PASSWORD:?MYTHIC_ADMIN_PASSWORD env var required (défini par Terraform)}"
+: "${MYTHIC_ADMIN_USER:=mythic_admin}"
 
 echo "🏛️  Démarrage de Mythic C2..."
 
 cd /opt/Mythic
 
-# Configuration initiale
-export MYTHIC_ADMIN_PASSWORD="PurpleTeam2024!"
-export MYTHIC_ADMIN_USER="mythic_admin"
+export MYTHIC_ADMIN_USER
 export MYTHIC_SERVER_PORT=7443
 export MYTHIC_DEBUG=false
 
@@ -24,7 +26,7 @@ sleep 30
 
 echo "🏛️  Mythic C2 est prêt!"
 echo "Interface: https://localhost:7443"
-echo "Admin: mythic_admin / PurpleTeam2024!"
+echo "Admin: ${MYTHIC_ADMIN_USER} (mot de passe défini via MYTHIC_ADMIN_PASSWORD)"
 
 # Garder le container en vie
-tail -f mythic.log 
+tail -f mythic.log

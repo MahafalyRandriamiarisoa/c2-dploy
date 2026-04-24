@@ -19,8 +19,8 @@ RUN mkdir -p /var/lib/postgresql/data \
 # Créer le répertoire de données
 RUN mkdir -p /root/.msf4
 RUN mkdir -p /opt/metasploit/payloads
-# Copier la configuration de la base
-COPY database.yml /root/.msf4/database.yml
+# Copier le template de configuration DB (le mdp est substitué au démarrage)
+COPY database.yml.tmpl /root/.msf4/database.yml.tmpl
 
 # Exposer les ports
 EXPOSE 4444 8080 5432

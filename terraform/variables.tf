@@ -49,12 +49,18 @@ variable "base_domain" {
   default     = "localhost"
 }
 
-# Credentials par défaut
+# Credentials pour les interfaces admin des C2 (obligatoire).
+# Fournir via la variable d'environnement TF_VAR_default_password ou un fichier
+# terraform.tfvars local (non committé, voir .gitignore).
 variable "default_password" {
-  description = "Mot de passe par défaut pour les C2"
+  description = "Mot de passe admin pour les C2 (Havoc, Mythic, Empire, Metasploit RPC). Obligatoire."
   type        = string
-  default     = "PurpleTeam2024!"
   sensitive   = true
+
+  validation {
+    condition     = length(var.default_password) >= 12
+    error_message = "default_password doit faire au moins 12 caractères. Définissez TF_VAR_default_password ou ajoutez-le dans un terraform.tfvars local."
+  }
 }
 
 variable "deploy_on_digitalocean" {

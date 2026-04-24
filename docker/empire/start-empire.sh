@@ -1,11 +1,11 @@
 #!/bin/bash
+set -euo pipefail
+
+: "${EMPIRE_PASSWORD:?EMPIRE_PASSWORD env var required (défini par Terraform)}"
 
 echo "👑 Démarrage d'Empire C2..."
 
 cd /opt/Empire
-
-# Configuration initiale
-export EMPIRE_PASSWORD="PurpleTeam2024!"
 
 # Créer la base de données
 echo "Initialisation de la base de données..."
@@ -21,7 +21,7 @@ sleep 10
 echo "👑 Empire C2 est prêt!"
 echo "REST API: http://localhost:1337"
 echo "Interface Web: http://localhost:5000"
-echo "Password: PurpleTeam2024!"
+echo "Password: (défini via EMPIRE_PASSWORD)"
 
 # Garder le container en vie
-tail -f /dev/null 
+tail -f /dev/null

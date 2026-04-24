@@ -151,7 +151,22 @@ make deps
 
 ## Configuration post-setup
 
-Après le setup, vous pouvez personnaliser la configuration :
+### Configuration des secrets (OBLIGATOIRE)
+
+Aucun mot de passe n'est committé dans le dépôt. Avant `make deploy` :
+
+```bash
+# Depuis la racine du dépôt
+cp .env.example .env
+# Éditer .env pour définir TF_VAR_default_password (>= 12 caractères)
+set -a && source .env && set +a
+```
+
+Alternative : copier `terraform/terraform.tfvars.example` vers `terraform/terraform.tfvars` (ignoré par git) et y renseigner `default_password`.
+
+Les mots de passe internes (Mythic RabbitMQ/Postgres, base Metasploit) sont générés aléatoirement par Terraform à chaque déploiement — rien à configurer.
+
+### Autres variables
 
 ```bash
 # Configuration interactive
@@ -161,8 +176,6 @@ make configure
 nano terraform/terraform.tfvars
 ```
 
-### Variables importantes
-
 ```hcl
 # Frameworks à déployer
 deploy_havoc      = true   # Havoc C2
@@ -170,9 +183,6 @@ deploy_sliver     = true   # Sliver C2
 deploy_mythic     = true   # Mythic C2
 deploy_empire     = false  # Empire C2
 deploy_metasploit = false  # Metasploit
-
-# Sécurité
-default_password = "PurpleTeam2024!"  # Changez en production !
 
 # Réseau
 network_subnet = "172.20.0.0/16"

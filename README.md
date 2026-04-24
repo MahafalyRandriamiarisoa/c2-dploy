@@ -158,13 +158,29 @@ make tdd
 └── payloads/         # Répertoire cible pour les payloads générés
 ```
 
-## Identifiants par défaut
+## Configuration des secrets
 
-| Service   | Utilisateur         | Mot de passe        |
-|-----------|---------------------|---------------------|
-| Mythic    | mythic_admin        | PurpleTeam2024!     |
-| Empire    | –                   | PurpleTeam2024!     |
-| Metasploit RPC | –             | PurpleTeam2024!     |
+Aucun mot de passe n'est committé dans le dépôt. Avant tout déploiement :
+
+```bash
+cp .env.example .env
+# éditer .env pour y mettre un mot de passe fort (>= 12 caractères)
+set -a && source .env && set +a
+make deploy
+```
+
+Alternative : copier `terraform/terraform.tfvars.example` vers `terraform/terraform.tfvars` (ignoré par git) et y définir `default_password`.
+
+Les mots de passe internes (Mythic RabbitMQ/Postgres, base Metasploit) sont générés aléatoirement par Terraform (`random_password`) à chaque déploiement.
+
+## Identifiants
+
+| Service        | Utilisateur  | Mot de passe                         |
+|----------------|--------------|--------------------------------------|
+| Mythic         | mythic_admin | `$TF_VAR_default_password`           |
+| Empire         | –            | `$TF_VAR_default_password`           |
+| Metasploit RPC | –            | `$TF_VAR_default_password`           |
+| Havoc          | admin        | `$TF_VAR_default_password`           |
 
 ## Ajout d'un nouveau framework C2
 

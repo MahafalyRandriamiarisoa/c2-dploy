@@ -12,10 +12,25 @@ terraform {
       source  = "digitalocean/digitalocean"
       version = ">= 2.33.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.5"
+    }
   }
 }
 
 provider "docker" {}
+
+# Mots de passe internes générés aléatoirement (inter-conteneurs, jamais saisis par l'utilisateur).
+resource "random_password" "mythic_internal" {
+  length  = 32
+  special = false
+}
+
+resource "random_password" "metasploit_db" {
+  length  = 32
+  special = false
+}
 
 # Création des dossiers de données locaux (conditionnel)
 locals {
@@ -104,6 +119,10 @@ resource "docker_container" "havoc_c2" {
     host_path      = "${path.cwd}/data/havoc"
   }
 
+  env = [
+    "HAVOC_ADMIN_PASSWORD=${var.default_password}"
+  ]
+
   healthcheck {
     test     = ["CMD", "curl", "-f", "http://localhost:40056"]
     interval = "30s"
@@ -165,7 +184,7 @@ resource "docker_container" "mythic_rabbitmq" {
 
   env = [
     "RABBITMQ_USER=mythic",
-    "RABBITMQ_PASSWORD=mythicpassword"
+    "RABBITMQ_PASSWORD=${random_password.mythic_internal.result}"
   ]
 
   healthcheck {
@@ -190,7 +209,7 @@ resource "docker_container" "mythic_postgres" {
 
   env = [
     "POSTGRES_USER=mythic",
-    "POSTGRES_PASSWORD=mythicpassword",
+    "POSTGRES_PASSWORD=${random_password.mythic_internal.result}",
     "POSTGRES_DB=mythic"
   ]
 
@@ -219,11 +238,13 @@ resource "docker_container" "mythic_server" {
   env = [
     "MYTHIC_RABBITMQ_HOST=172.20.0.31",
     "MYTHIC_RABBITMQ_USER=mythic",
-    "MYTHIC_RABBITMQ_PASSWORD=mythicpassword",
+    "MYTHIC_RABBITMQ_PASSWORD=${random_password.mythic_internal.result}",
     "MYTHIC_POSTGRES_HOST=172.20.0.32",
     "MYTHIC_POSTGRES_USER=mythic",
-    "MYTHIC_POSTGRES_PASSWORD=mythicpassword",
-    "MYTHIC_POSTGRES_DB=mythic"
+    "MYTHIC_POSTGRES_PASSWORD=${random_password.mythic_internal.result}",
+    "MYTHIC_POSTGRES_DB=mythic",
+    "MYTHIC_ADMIN_USER=mythic_admin",
+    "MYTHIC_ADMIN_PASSWORD=${var.default_password}"
   ]
 }
 
@@ -292,6 +313,10 @@ resource "docker_container" "empire_c2" {
     host_path      = "${path.cwd}/data/empire"
   }
 
+  env = [
+    "EMPIRE_PASSWORD=${var.default_password}"
+  ]
+
   working_dir = "/empire"
 
   healthcheck {
@@ -330,6 +355,11 @@ resource "docker_container" "metasploit_c2" {
     container_path = "/root/.msf4"
     host_path      = "${path.cwd}/data/metasploit"
   }
+
+  env = [
+    "METASPLOIT_RPC_PASSWORD=${var.default_password}",
+    "METASPLOIT_DB_PASSWORD=${random_password.metasploit_db.result}"
+  ]
 
   healthcheck {
     test     = ["CMD", "curl", "-f", "http://localhost:8080"]

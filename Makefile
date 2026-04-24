@@ -94,12 +94,19 @@ fmt: ## Formater le code Terraform
 	cd $(TERRAFORM_DIR) && $(TF_BIN) fmt -recursive
 	@echo "$(GREEN)✅ Code formaté$(NC)"
 
-plan: validate ## Planifier les changements
+check-secrets: ## Vérifier que TF_VAR_default_password est défini (env ou tfvars local)
+	@if [ -z "$$TF_VAR_default_password" ] && ! grep -q "^default_password" $(TERRAFORM_DIR)/terraform.tfvars 2>/dev/null; then \
+		echo "$(RED)❌ TF_VAR_default_password non défini et absent de terraform/terraform.tfvars$(NC)"; \
+		echo "$(YELLOW)💡 cp .env.example .env && éditer .env && set -a && source .env && set +a$(NC)"; \
+		exit 1; \
+	fi
+
+plan: validate check-secrets ## Planifier les changements
 	@echo "$(BLUE)[TERRAFORM]$(NC) Plan..."
 	cd $(TERRAFORM_DIR) && $(TF_BIN) init
 	cd $(TERRAFORM_DIR) && $(TF_BIN) plan
 
-deploy: validate ## Déployer l'infrastructure complète
+deploy: validate check-secrets ## Déployer l'infrastructure complète
 	@echo "$(BLUE)[TERRAFORM]$(NC) Déploiement..."
 	cd $(TERRAFORM_DIR) && $(TF_BIN) init
 	cd $(TERRAFORM_DIR) && $(TF_BIN) apply -auto-approve

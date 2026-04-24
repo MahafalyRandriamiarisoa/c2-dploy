@@ -81,10 +81,15 @@ read -p "Subnet réseau [172.20.0.0/16]: " NETWORK_SUBNET
 NETWORK_SUBNET=${NETWORK_SUBNET:-172.20.0.0/16}
 
 echo ""
-echo -e "${RED}🔐 Sécurité - Mot de passe par défaut:${NC}"
-read -s -p "Mot de passe par défaut [PurpleTeam2024!]: " DEFAULT_PASSWORD
-DEFAULT_PASSWORD=${DEFAULT_PASSWORD:-PurpleTeam2024!}
-echo ""
+echo -e "${RED}🔐 Sécurité - Mot de passe admin des C2 (minimum 12 caractères):${NC}"
+while true; do
+    read -s -p "Mot de passe admin: " DEFAULT_PASSWORD
+    echo ""
+    if [ "${#DEFAULT_PASSWORD}" -ge 12 ]; then
+        break
+    fi
+    echo -e "${RED}❌ Le mot de passe doit faire au moins 12 caractères.${NC}"
+done
 
 # Génération du fichier terraform.tfvars
 echo ""

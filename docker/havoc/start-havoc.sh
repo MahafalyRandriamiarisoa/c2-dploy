@@ -1,4 +1,7 @@
 #!/bin/bash
+set -euo pipefail
+
+: "${HAVOC_ADMIN_PASSWORD:?HAVOC_ADMIN_PASSWORD env var required (défini par Terraform)}"
 
 echo "🗡️  Démarrage de Havoc C2..."
 
@@ -18,7 +21,7 @@ Teamserver {
 
 Operators {
     user "admin" {
-        Password = "PurpleTeam2024!"
+        Password = "${HAVOC_ADMIN_PASSWORD}"
     }
 }
 
